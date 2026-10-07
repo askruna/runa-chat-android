@@ -386,7 +386,7 @@ public final class RunaChatActivity extends Activity {
     // ── URL ──────────────────────────────────────────────────────────────────────────────────
 
     private String buildUrl(RunaChat.Options o) {
-        Uri.Builder b = Uri.parse(o.pageUrl).buildUpon();
+        Uri.Builder b = Uri.parse(o.pageUrl()).buildUpon();
         put(b, "zip", o.zip);
         put(b, "userId", o.userId);
         put(b, "platform", "android");

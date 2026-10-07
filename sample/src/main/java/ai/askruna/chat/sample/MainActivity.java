@@ -26,7 +26,6 @@ import ai.askruna.chat.RunaChat;
 public class MainActivity extends Activity {
 
     static final String TAG = "RunaSample";
-    static final String PAGE = "https://quicklly.askruna.ai/app/chat-app.html";
 
     private TextView cartLine;
 
@@ -86,7 +85,7 @@ public class MainActivity extends Activity {
     // ─── This is the whole integration ──────────────────────────────────────────────────────
     private void openChat(String question) {
         RunaChat.open(this,
-            new RunaChat.Options(PAGE)
+            new RunaChat.Options("quicklly")            // the client key from Runa
                 .zip("60610")
                 .userId("sample-user-1")
                 .address("1140 N Wells St, Chicago").city("Chicago").state("IL")

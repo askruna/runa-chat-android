@@ -19,7 +19,7 @@ product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.askruna:runa-chat-android:1.0.0'
+implementation 'com.github.askruna:runa-chat-android:1.0.1'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
@@ -28,7 +28,7 @@ Nothing to add to your manifest: the library declares its own screen and the INT
 
 ```java
 RunaChat.open(this,
-    new RunaChat.Options("https://quicklly.askruna.ai/app/chat-app.html")   // the page URL Runa gives you
+    new RunaChat.Options("quicklly")        // your client key from Runa
         .zip("60610")                       // the delivery ZIP (required)
         .userId("12345")                    // customer id, or a stable id for guests
         .address("1140 N Wells St, Chicago").city("Chicago").state("IL"),
@@ -86,8 +86,8 @@ WebView, native taps through adb, the callbacks in logcat): `npm i playwright &&
 
 ## How it works
 
-The library opens `RunaChatActivity`, a full-screen `WebView` on the chat page with a JSON message
-bridge: the page calls `window.RunaAndroid.postMessage(json)` and the library answers with
+The library opens `RunaChatActivity`, a full-screen `WebView` on the chat page Runa hosts for your
+client key, with a JSON message bridge: the page calls `window.RunaAndroid.postMessage(json)` and the library answers with
 `window.RunaBridge.receive(json)`. The messages are documented at
 https://quicklly.askruna.ai/app/docs/. Only the page's own origin can use the bridge.
 

@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <pre>
  * RunaChat.open(activity,
- *     new RunaChat.Options("https://quicklly.askruna.ai/app/chat-app.html")
+ *     new RunaChat.Options("quicklly")              // your client key from Runa
  *         .zip("60610").userId("12345"),
  *     new RunaChat.Callbacks() {
  *         public void setQuantity(RunaChat.Product product, int quantity) { ... your add-to-cart ... }
@@ -56,14 +56,22 @@ public final class RunaChat {
         default void onMessage(String type, JSONObject payload) {}
     }
 
-    /** Where the chat page is and who / where the shopper is. Only the page URL and zip are required. */
+    /** Who the client is and who / where the shopper is. Only the client key and zip are required. */
     public static final class Options {
-        final String pageUrl;
+        final String client;
+        String pageUrl;
         String zip, userId, address, city, state, storeId, question;
         boolean debug;
 
-        /** @param pageUrl the chat page Runa gives you, e.g. https://quicklly.askruna.ai/app/chat-app.html */
-        public Options(String pageUrl) { this.pageUrl = pageUrl; }
+        /** @param client your client key from Runa, e.g. "quicklly" */
+        public Options(String client) { this.client = client == null ? "" : client.trim().toLowerCase(java.util.Locale.ROOT); }
+
+        /** The chat page for this client. Runa hosts it; the key is all the app needs to know. */
+        String pageUrl() {
+            return pageUrl != null ? pageUrl : "https://" + client + ".askruna.ai/app/chat-app.html";
+        }
+        /** Runa's own use: point at a test page instead of the client's live page. */
+        public Options pageUrl(String url) { this.pageUrl = url; return this; }
 
         /** The delivery ZIP. Required: the chat shows the stores that deliver there. */
         public Options zip(String zip) { this.zip = zip; return this; }
@@ -135,7 +143,8 @@ public final class RunaChat {
     /** Open the chat screen. */
     public static void open(Activity from, Options options, Callbacks callbacks) {
         if (from == null || options == null || callbacks == null) throw new IllegalArgumentException("activity, options and callbacks are required");
-        if (options.pageUrl == null || !options.pageUrl.startsWith("https://")) throw new IllegalArgumentException("Options needs the https page URL Runa gave you");
+        if (!options.client.matches("[a-z0-9-]+")) throw new IllegalArgumentException("Options needs your client key from Runa, e.g. \"quicklly\"");
+        if (!options.pageUrl().startsWith("https://")) throw new IllegalArgumentException("the chat page must be https");
         if (options.zip == null || options.zip.trim().isEmpty()) throw new IllegalArgumentException("Options.zip(…) is required");
         session = new Session(options, callbacks);
         from.startActivity(new Intent(from, RunaChatActivity.class));
