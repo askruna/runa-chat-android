@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'ai.askruna.chat'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 21
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    // Java 8 bytecode: works in any app, Java or Kotlin.
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'ai.askruna'
+                artifactId = 'runa-chat-android'
+                version = '1.0.0'
+            }
+        }
+    }
+}

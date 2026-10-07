@@ -1,0 +1,33 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'ai.askruna.chat.sample'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'ai.askruna.chat.sample'
+        minSdk 21
+        targetSdk 35
+        versionCode 1
+        versionName '1.0-sample'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true      // proves the library's keep rules survive minification
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+dependencies {
+    implementation project(':runachat')
+}
