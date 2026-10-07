@@ -75,7 +75,8 @@ check(true, "chat opened in app mode inside the library's WebView");
 check(!!(await waitLog(/page→app ready/)), "page said ready");
 check(!!(await waitLog(/app→page cart/)), "library answered with the cart");
 const q = await page.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
-check(q.zip === "60610" && q.userId === "sample-user-1" && q.platform === "android" && q.appVersion === "1.0-sample", `URL built from options: zip=${q.zip} userId=${q.userId} platform=${q.platform} appVersion=${q.appVersion}`);
+const appVersion = adb(`shell dumpsys package ${PKG}`).match(/versionName=(\S+)/)?.[1];   // the library reports the app's own version
+check(q.zip === "60610" && q.userId === "sample-user-1" && q.platform === "android" && q.appVersion === appVersion, `URL built from options: zip=${q.zip} userId=${q.userId} platform=${q.platform} appVersion=${q.appVersion} (app: ${appVersion})`);
 const head = await page.evaluate(() => { const h = document.querySelector(".runa-c__window-head").cloneNode(true); h.querySelectorAll("select,button").forEach((n) => n.remove()); return h.textContent.replace(/\s+/g, " ").trim(); });
 check(head === "Ask Quicklly", `header: "${head}"`);
 const opts = await page.locator(".runa-c__store-select option").allTextContents();
