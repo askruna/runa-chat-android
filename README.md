@@ -19,7 +19,7 @@ product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.adib85:runa-chat-android:1.0.0'
+implementation 'com.github.askruna:runa-chat-android:1.0.0'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
