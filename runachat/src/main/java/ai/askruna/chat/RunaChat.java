@@ -100,6 +100,13 @@ public final class RunaChat {
         public final String storeSlug;
         public final String url;
         public final boolean fastDelivery;
+        /** The store's terms for the shopper's ZIP, from Quicklly's own store list. null = unknown. */
+        public final Double minOrder;
+        public final Double deliveryFee;
+        /** Their delivery label for the store, e.g. "Delivery In 3 hours or less" or "5:30 PM - 8:30 PM". */
+        public final String deliveryRange;
+        public final boolean instantDelivery;
+        public final String storeImage;
         /** The whole message payload, for anything not listed above. */
         public final JSONObject raw;
 
@@ -114,6 +121,11 @@ public final class RunaChat {
             storeSlug = p.optString("storeSlug", "");
             url = p.optString("url", "");
             fastDelivery = "1".equals(p.optString("fastdelivery", ""));
+            minOrder = p.isNull("minOrder") || !p.has("minOrder") ? null : p.optDouble("minOrder");
+            deliveryFee = p.isNull("deliveryFee") || !p.has("deliveryFee") ? null : p.optDouble("deliveryFee");
+            deliveryRange = p.optString("deliveryRange", "");
+            instantDelivery = p.optBoolean("instantDelivery", false);
+            storeImage = p.optString("storeImage", "");
         }
 
         @Override public String toString() { return "Product{pid=" + pid + ", sid=" + sid + ", title=" + title + "}"; }

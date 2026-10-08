@@ -108,7 +108,8 @@ adb("shell input keyevent 111");   // hide the keyboard (ESC)
 await sleep(800);
 await page.locator(".runa-c__pcard-add").first().click();
 const sq = await waitLog(/setQuantity pid=\d+ sid=\d+ qty=1/);
-check(!!sq, "ADD → Callbacks.setQuantity(product, 1): " + (sq || "").replace(/.*setQuantity /, ""));
+check(!!sq, "ADD → Callbacks.setQuantity(product, 1): " + (sq || "").replace(/.*setQuantity /, "").slice(0, 120));
+check(/minOrder=\d+(\.\d+)? deliveryFee=\d+(\.\d+)? range=\S/.test(sq || ""), "product carries the store's terms for the ZIP (minOrder, deliveryFee, range)");
 await sleep(600);
 check((await page.locator(".runa-c__pcard-qty-n").first().textContent()).trim() === "1", "stepper shows 1 (from getCart)");
 
