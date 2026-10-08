@@ -3,10 +3,10 @@
 The Runa AI shopping assistant ("Ask Quicklly") as a screen in your Android app. One dependency,
 one call to open it, two callbacks to connect it to your cart.
 
-The chat itself is a web page hosted by Runa and shown full screen inside the library's own
-screen; it is updated by Runa without app releases. The app provides only what the app alone can
-do: who and where the shopper is, adding to the cart, what is in the cart, and opening your
-product screen.
+The chat itself is hosted and updated by Runa and shown full screen by the library's own
+screen, so improvements reach your users without app releases. The app provides only what the app
+alone can do: who and where the shopper is, adding to the cart, what is in the cart, and opening
+your product screen.
 
 - Java, no dependencies beyond the Android SDK, 17 KB
 - minSdk 21 (Android 5.0+), tested on Android 14
@@ -72,7 +72,7 @@ your own system.
 
 All callbacks run on the main thread. The library handles the keyboard, system bars and the
 notch, the Android back button (the chat closes its own menus first), outside links, loading and
-error states, and keeps the WebView on the chat page only.
+error states, and keeps outside links out of the chat screen.
 
 ## Sample app
 
@@ -83,15 +83,14 @@ error states, and keeps the WebView on the chat page only.
 ./gradlew :sample:installDebug      # on a connected device or emulator
 ```
 
-`tests/e2e.mjs` drives the sample end to end on an emulator (the chat inside the library's
-WebView, native taps through adb, the callbacks in logcat): `npm i playwright && node tests/e2e.mjs`.
+`tests/e2e.mjs` drives the sample end to end on an emulator (the chat screen, native taps
+through adb, the callbacks in logcat): `npm i playwright && node tests/e2e.mjs`.
 
-## How it works
+## Documentation
 
-The library opens `RunaChatActivity`, a full-screen `WebView` on the chat page Runa hosts for your
-client key, with a JSON message bridge: the page calls `window.RunaAndroid.postMessage(json)` and the library answers with
-`window.RunaBridge.receive(json)`. The messages are documented at
-https://quicklly.askruna.ai/app/docs/. Only the page's own origin can use the bridge.
+The integration guide, the test checklist and a live demo: https://quicklly.askruna.ai/app/docs/.
+The chat itself is hosted and updated by Runa, so improvements reach your users without an app
+release; the library only needs the two callbacks above.
 
 ## License
 

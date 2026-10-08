@@ -24,7 +24,7 @@ import java.util.List;
  *     });
  * </pre>
  *
- * The chat itself is a web page hosted by Runa, shown full screen; it is updated without app
+ * The chat itself is hosted and updated by Runa, shown full screen; improvements reach your users without app
  * releases. The app only answers the two calls above (plus the optional ones in {@link Callbacks}).
  * All callbacks run on the main thread.
  */
