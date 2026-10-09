@@ -112,6 +112,7 @@ public class MainActivity extends Activity {
 
                 @Override public boolean openLink(Activity chat, String url) {
                     Log.i(TAG, "openLink " + url);
+                    if (url.endsWith("runa-fallback-test")) return false;   // test only: let the library's in-app browser show
                     Toast.makeText(chat, "Would open " + url, Toast.LENGTH_SHORT).show();
                     return true;
                 }

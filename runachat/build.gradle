@@ -25,6 +25,11 @@ android {
     }
 }
 
+dependencies {
+    // The in-app browser sheet (Chrome Custom Tabs) used when the app does not handle a link itself.
+    implementation 'androidx.browser:browser:1.8.0'
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -32,7 +37,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'ai.askruna'
                 artifactId = 'runa-chat-android'
-                version = '1.0.2'
+                version = '1.0.3'
             }
         }
     }

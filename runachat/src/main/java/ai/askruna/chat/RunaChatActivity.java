@@ -30,6 +30,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import androidx.browser.customtabs.CustomTabsIntent;
 import android.widget.TextView;
 import android.window.OnBackInvokedDispatcher;
 
@@ -283,7 +284,7 @@ public final class RunaChatActivity extends Activity {
                 }
                 case "openProduct": {
                     RunaChat.Product product = new RunaChat.Product(payload);
-                    if (!cb.openProduct(this, product) && !product.url.isEmpty()) openInBrowser(product.url);
+                    if (!cb.openProduct(this, product) && !product.url.isEmpty()) openInApp(product.url);
                     break;
                 }
                 case "openExternal":
@@ -310,12 +311,25 @@ public final class RunaChatActivity extends Activity {
     private void openLink(String u) {
         if (u == null || u.isEmpty()) return;
         if (session != null && session.callbacks.openLink(this, u)) return;
-        openInBrowser(u);
+        openInApp(u);
     }
 
-    private void openInBrowser(String u) {
+    /** The fallback when the app does not handle a link itself: an in-app browser sheet over the chat
+     *  (Chrome Custom Tabs, with its own close button), so the shopper never leaves the app. Anything
+     *  that is not http(s) — mailto:, tel:, another app's scheme — goes to the system. */
+    private void openInApp(String u) {
+        Uri uri = Uri.parse(u);
+        String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(java.util.Locale.ROOT);
+        if (scheme.equals("http") || scheme.equals("https")) {
+            try {
+                new CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(this, uri);
+                return;
+            } catch (Throwable t) {
+                Log.w(TAG, "custom tab failed, opening the browser", t);
+            }
+        }
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(u)));
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
         } catch (ActivityNotFoundException e) {
             Log.w(TAG, "no app can open " + u);
         }

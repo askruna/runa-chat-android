@@ -135,6 +135,15 @@ check((await page.locator(".runa-c__pcard-qty-n").first().textContent()).trim() 
 await page.evaluate(() => window.open("https://www.quicklly.com/", "_blank"));
 check(!!(await waitLog(/openLink https:\/\/www\.quicklly\.com/)), "outside link → Callbacks.openLink");
 
+// Outside link the app does NOT handle → the library's in-app browser (Chrome Custom Tab), never a plain browser launch
+await page.evaluate(() => window.open("https://www.quicklly.com/runa-fallback-test", "_blank"));
+check(!!(await waitLog(/openLink https:\/\/www\.quicklly\.com\/runa-fallback-test/)), "unhandled link → Callbacks.openLink returned false");
+check(await waitTop(/CustomTabActivity/, 15000), "library opened it in an in-app browser (Custom Tab): " + top());
+adb("shell input keyevent 4");
+check(await waitTop(/RunaChatActivity/), "back from the in-app browser → chat");
+await sleep(1200);
+page = await chatPage();
+
 // Back: menu open → the page closes it; nothing open → the screen closes
 await page.locator('.runa-c__window-icon[aria-label="More options"]').click();
 await sleep(600);
