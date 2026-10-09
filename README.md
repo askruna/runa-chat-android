@@ -1,7 +1,7 @@
 # Runa Chat for Android
 
 The Runa AI shopping assistant ("Ask Quicklly") as a screen in your Android app. One dependency,
-one call to open it, two callbacks to connect it to your cart.
+one call to open it, three callbacks to connect it to your cart and your product screen.
 
 The chat itself is hosted and updated by Runa and shown full screen by the library's own
 screen, so improvements reach your users without app releases. The app provides only what the app
@@ -38,6 +38,10 @@ RunaChat.open(this,
         }
         @Override public List<RunaChat.CartItem> getCart() {
             // what is in your cart now: one CartItem(pid, sid, quantity) per line
+        }
+        @Override public boolean openProduct(Activity chat, RunaChat.Product product) {
+            // open your product screen for product.pid / product.sid, then return true
+            return true;
         }
     });
 ```
@@ -95,7 +99,7 @@ through adb, the callbacks in logcat): `npm i playwright && node tests/e2e.mjs`.
 
 The integration guide, the test checklist and a live demo: https://quicklly.askruna.ai/app/docs/.
 The chat itself is hosted and updated by Runa, so improvements reach your users without an app
-release; the library only needs the two callbacks above.
+release; the library only needs the three callbacks above.
 
 ## License
 
