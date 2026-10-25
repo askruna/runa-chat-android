@@ -131,6 +131,27 @@ check(sent, "the question was sent as the first message");
 adb("shell input keyevent 4");      // nothing open in the chat → the chat closes
 check(await waitTop(/SearchActivity/, 15000), "back → search screen");
 
+// "Ask me anything" → the chat screen opens with no question, still credited to Ask Quicklly in search
+page = await pageWith("search-app.html");
+await page.locator(".runa-sb .runa-sb__chip--ask").first().click({ noWaitAfter: true });
+check(await waitTop(/RunaChatActivity/, 20000), '"Ask me anything" → the chat screen opened');
+const chat2 = await pageWith("chat-app.html");
+const cq2 = await chat2.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
+check(!cq2.q && cq2.entry === "search_answers" && cq2.zip === "60610", `chat opened without a question (q=${cq2.q || "none"}), entry=${cq2.entry}`);
+await chat2.waitForSelector(".runa-c__window--app .runa-c__composer-text", { timeout: 30000 });
+// the shopper's own messages: the earlier conversation is restored (its answer may still be arriving), nothing new is sent
+const msgs = async () => chat2.evaluate(() => document.querySelectorAll(".runa-c__msg-block--user").length);
+await sleep(1500);
+const m1 = await msgs();
+await sleep(4000);
+const m2 = await msgs();
+const boxes = await chat2.evaluate(() => [...document.querySelectorAll(".runa-c__composer-text")].map((i) => ({ v: i.value, shown: i.offsetParent !== null })));
+const box = boxes.filter((b) => b.shown).map((b) => (b.v || "").trim()).join("");
+check(m1 === m2 && box === "", `nothing sent by itself: shopper messages ${m1} → ${m2} over 4 s, the message box is empty and ready (${JSON.stringify(boxes)})`);
+fs.writeFileSync(SHOTS + "/runasearch-android-ask.png", execSync("adb exec-out screencap -p", { maxBuffer: 50e6 }));
+adb("shell input keyevent 4");
+check(await waitTop(/SearchActivity/, 15000), "back → search screen");
+
 // a new search typed in the app's field → the same view answers it (no reload)
 adb("logcat -c");
 xml = ui();
