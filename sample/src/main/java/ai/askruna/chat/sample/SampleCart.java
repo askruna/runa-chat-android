@@ -31,6 +31,8 @@ final class SampleCart {
 
     static synchronized int qty(String pid) { Line l = lines.get(pid); return l == null ? 0 : l.qty; }
 
+    static synchronized void clear() { lines.clear(); }
+
     static synchronized int count() { int n = 0; for (Line l : lines.values()) n += l.qty; return n; }
 
     static synchronized List<Line> lines() { return new ArrayList<>(lines.values()); }

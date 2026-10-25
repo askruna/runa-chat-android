@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sample app only: Runa's tests load the pages over plain http from the developer's laptop (adb reverse →
+     quicklly.localhost), and a page served over http opens the chat's live connection (PubNub) over http too.
+     Everything else stays https-only. A real app needs nothing here: the live pages are https. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">pndsn.com</domain>
+        <domain includeSubdomains="true">pubnub.com</domain>
+    </domain-config>
+</network-security-config>

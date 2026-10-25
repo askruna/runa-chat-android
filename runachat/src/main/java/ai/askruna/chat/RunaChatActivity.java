@@ -2,10 +2,7 @@ package ai.askruna.chat;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.net.Uri;
@@ -30,7 +27,6 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import androidx.browser.customtabs.CustomTabsIntent;
 import android.widget.TextView;
 import android.window.OnBackInvokedDispatcher;
 
@@ -49,7 +45,7 @@ import java.util.List;
 public final class RunaChatActivity extends Activity {
 
     private static final String TAG = "RunaChat";
-    private static final String BRIDGE_VERSION = "1.0";
+    static final String BRIDGE_VERSION = "1.1";
     private static final long BACK_TIMEOUT_MS = 400;
 
     private static WeakReference<RunaChatActivity> currentRef = new WeakReference<>(null);
@@ -75,7 +71,7 @@ public final class RunaChatActivity extends Activity {
         currentRef = new WeakReference<>(this);
 
         String url = buildUrl(session.options);
-        origin = originOf(url);
+        origin = RunaChat.originOf(url);
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.WHITE);
@@ -314,25 +310,9 @@ public final class RunaChatActivity extends Activity {
         openInApp(u);
     }
 
-    /** The fallback when the app does not handle a link itself: an in-app browser sheet over the chat
-     *  (Chrome Custom Tabs, with its own close button), so the shopper never leaves the app. Anything
-     *  that is not http(s) — mailto:, tel:, another app's scheme — goes to the system. */
+    /** The fallback when the app does not handle a link itself: an in-app browser sheet over the chat. */
     private void openInApp(String u) {
-        Uri uri = Uri.parse(u);
-        String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(java.util.Locale.ROOT);
-        if (scheme.equals("http") || scheme.equals("https")) {
-            try {
-                new CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(this, uri);
-                return;
-            } catch (Throwable t) {
-                Log.w(TAG, "custom tab failed, opening the browser", t);
-            }
-        }
-        try {
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-        } catch (ActivityNotFoundException e) {
-            Log.w(TAG, "no app can open " + u);
-        }
+        RunaChat.openInApp(this, u);
     }
 
     // ── App → page ───────────────────────────────────────────────────────────────────────────
@@ -401,34 +381,9 @@ public final class RunaChatActivity extends Activity {
 
     private String buildUrl(RunaChat.Options o) {
         Uri.Builder b = Uri.parse(o.pageUrl()).buildUpon();
-        put(b, "zip", o.zip);
-        put(b, "userId", o.userId);
-        put(b, "platform", "android");
-        put(b, "appVersion", appVersion());
-        put(b, "address", o.address);
-        put(b, "city", o.city);
-        put(b, "state", o.state);
-        put(b, "storeId", o.storeId);
-        put(b, "q", o.question);
-        if (o.debug) put(b, "debug", "1");
+        RunaChat.putShopper(b, o, this);
+        RunaChat.put(b, "q", o.question);
+        RunaChat.put(b, "entry", o.entry);      // "search_answers": opened from RunaSearchView
         return b.build().toString();
-    }
-
-    private static void put(Uri.Builder b, String key, String value) {
-        if (value != null && !value.trim().isEmpty()) b.appendQueryParameter(key, value.trim());
-    }
-
-    private String appVersion() {
-        try {
-            PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);
-            return p.versionName;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String originOf(String u) {
-        Uri x = Uri.parse(u);
-        return x.getScheme() + "://" + x.getAuthority() + "/";
     }
 }

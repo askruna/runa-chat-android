@@ -20,12 +20,16 @@ import java.util.List;
 import ai.askruna.chat.RunaChat;
 
 /**
- * A stand-in for the Quicklly app: a cart, a product screen and an "Ask Quicklly" button.
- * Everything Quicklly writes is in openChat(): the options and the callbacks.
+ * A stand-in for the Quicklly app: a cart, a product screen, a search screen with Ask Quicklly in search
+ * (SearchActivity), an "Ask Quicklly" button and a checkout. Everything Quicklly writes is in options(),
+ * callbacks(), openChat() and placeOrder().
  */
 public class MainActivity extends Activity {
 
     static final String TAG = "RunaSample";
+
+    /** Runa's own tests: the folder the pages are served from (e.g. http://quicklly.localhost:5521/). Null = live. */
+    static String pageBase;
 
     private TextView cartLine;
 
@@ -43,6 +47,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         RunaChat.warmUp(this);
+        if (getIntent().hasExtra("page_base")) pageBase = getIntent().getStringExtra("page_base");
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -63,6 +68,14 @@ public class MainActivity extends Activity {
         deep.setText("Ask about paneer (deep link)");
         deep.setOnClickListener(v -> openChat("What can I cook tonight with paneer?"));
         box.addView(deep);
+        Button search = new Button(this);
+        search.setText("Search");
+        search.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        box.addView(search);
+        Button order = new Button(this);
+        order.setText("Place order");
+        order.setOnClickListener(v -> placeOrder());
+        box.addView(order);
         setContentView(box);
 
         IntentFilter f = new IntentFilter("ai.askruna.chat.sample.BUMP");
@@ -70,6 +83,8 @@ public class MainActivity extends Activity {
         else registerReceiver(bump, f);
 
         if (getIntent().getBooleanExtra("open_chat", false)) openChat(null);
+        String q = getIntent().getStringExtra("search");
+        if (q != null) startActivity(new Intent(this, SearchActivity.class).putExtra("query", q));
     }
 
     @Override protected void onResume() { super.onResume(); refresh(); }
@@ -83,43 +98,70 @@ public class MainActivity extends Activity {
     }
 
     // ─── This is the whole integration ──────────────────────────────────────────────────────
+
+    /** Who and where the shopper is — the same for the chat, the search view and the order report. */
+    static RunaChat.Options options() {
+        RunaChat.Options o = new RunaChat.Options("quicklly")   // the client key from Runa
+            .zip("60610")
+            .userId("sample-user-1")
+            .address("1140 N Wells St, Chicago").city("Chicago").state("IL")
+            .debug(true);
+        if (pageBase != null) o.pageUrl(pageBase + "chat-app.html");   // Runa's tests only
+        return o;
+    }
+
+    /** Your cart and your product screen — the same for the chat and the search view. */
+    static RunaChat.Callbacks callbacks() {
+        return new RunaChat.Callbacks() {
+            @Override public void setQuantity(RunaChat.Product p, int quantity) {
+                Log.i(TAG, "setQuantity pid=" + p.pid + " sid=" + p.sid + " qty=" + quantity + " title=" + p.title
+                    + " minOrder=" + p.minOrder + " deliveryFee=" + p.deliveryFee + " range=" + p.deliveryRange + " instant=" + p.instantDelivery);
+                SampleCart.set(p.pid, p.sid, p.title, p.price, quantity);   // your add-to-cart
+            }
+
+            @Override public List<RunaChat.CartItem> getCart() {
+                return SampleCart.snapshot();                                   // your cart
+            }
+
+            @Override public boolean openProduct(Activity from, RunaChat.Product p) {
+                Log.i(TAG, "openProduct pid=" + p.pid + " sid=" + p.sid);
+                from.startActivity(new Intent(from, ProductActivity.class)
+                    .putExtra("pid", p.pid).putExtra("sid", p.sid).putExtra("title", p.title)
+                    .putExtra("price", p.price == null ? 0 : p.price));
+                return true;
+            }
+
+            @Override public boolean openLink(Activity from, String url) {
+                Log.i(TAG, "openLink " + url);
+                if (url.endsWith("runa-fallback-test")) return false;   // test only: let the library's in-app browser show
+                Toast.makeText(from, "Would open " + url, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            @Override public void onClose() { Log.i(TAG, "chat closed"); }
+
+            @Override public void onMessage(String type, JSONObject payload) { Log.i(TAG, "message " + type + " " + payload); }
+        };
+    }
+
     private void openChat(String question) {
-        RunaChat.open(this,
-            new RunaChat.Options("quicklly")            // the client key from Runa
-                .zip("60610")
-                .userId("sample-user-1")
-                .address("1140 N Wells St, Chicago").city("Chicago").state("IL")
-                .question(question)
-                .debug(true),
-            new RunaChat.Callbacks() {
-                @Override public void setQuantity(RunaChat.Product p, int quantity) {
-                    Log.i(TAG, "setQuantity pid=" + p.pid + " sid=" + p.sid + " qty=" + quantity + " title=" + p.title
-                        + " minOrder=" + p.minOrder + " deliveryFee=" + p.deliveryFee + " range=" + p.deliveryRange + " instant=" + p.instantDelivery);
-                    SampleCart.set(p.pid, p.sid, p.title, p.price, quantity);   // your add-to-cart
-                }
+        RunaChat.open(this, options().question(question), callbacks());
+    }
 
-                @Override public List<RunaChat.CartItem> getCart() {
-                    return SampleCart.snapshot();                                   // your cart
-                }
-
-                @Override public boolean openProduct(Activity chat, RunaChat.Product p) {
-                    Log.i(TAG, "openProduct pid=" + p.pid + " sid=" + p.sid);
-                    chat.startActivity(new Intent(chat, ProductActivity.class)
-                        .putExtra("pid", p.pid).putExtra("sid", p.sid).putExtra("title", p.title)
-                        .putExtra("price", p.price == null ? 0 : p.price));
-                    return true;
-                }
-
-                @Override public boolean openLink(Activity chat, String url) {
-                    Log.i(TAG, "openLink " + url);
-                    if (url.endsWith("runa-fallback-test")) return false;   // test only: let the library's in-app browser show
-                    Toast.makeText(chat, "Would open " + url, Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-
-                @Override public void onClose() { Log.i(TAG, "chat closed"); }
-
-                @Override public void onMessage(String type, JSONObject payload) { Log.i(TAG, "message " + type + " " + payload); }
-            });
+    /** After your checkout succeeds: the order number, what was paid for the products, and the lines. */
+    private void placeOrder() {
+        List<SampleCart.Line> lines = SampleCart.lines();
+        double total = 0;
+        for (SampleCart.Line l : lines) total += (l.price == null ? 0 : l.price) * l.qty;
+        RunaChat.Order order = new RunaChat.Order("SAMPLE-" + (System.currentTimeMillis() / 1000), Math.round(total * 100) / 100.0);
+        for (SampleCart.Line l : lines) order.line(l.pid, l.sid, l.price == null ? 0 : l.price, l.qty);
+        final int n = lines.size();
+        RunaChat.orderPlaced(this, options(), order, (reported, reason) -> {
+            Log.i(TAG, "order reported=" + reported + " reason=" + reason + " lines=" + n);
+            Toast.makeText(this, reported ? "Order reported" : "Order not reported: " + reason, Toast.LENGTH_SHORT).show();
+        });
+        Log.i(TAG, "placeOrder " + n + " line(s), total " + total);
+        SampleCart.clear();
+        refresh();
     }
 }

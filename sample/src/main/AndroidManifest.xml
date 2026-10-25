@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- networkSecurityConfig: plain http to *.localhost only — Runa's own tests serve the pages from a laptop. -->
     <application
         android:label="Runa Chat sample"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@android:style/Theme.Material.Light.DarkActionBar">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -10,5 +12,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".ProductActivity" android:exported="false" />
+        <activity android:name=".SearchActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
     </application>
 </manifest>
