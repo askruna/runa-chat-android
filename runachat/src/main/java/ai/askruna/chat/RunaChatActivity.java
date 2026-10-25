@@ -26,7 +26,6 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.window.OnBackInvokedDispatcher;
 
@@ -55,7 +54,9 @@ public final class RunaChatActivity extends Activity {
     private final Handler main = new Handler(Looper.getMainLooper());
     private RunaChat.Session session;
     private WebView webView;
-    private ProgressBar spinner;
+    private LoadingView loading;
+    // the loading screen goes when the page says the chat has drawn (`shown`); this is the fallback if it never does
+    private final Runnable hideLoading = () -> { if (loading != null) loading.hide(true); };
     private View errorView;
     private String origin;
     private boolean pageReady;
@@ -83,9 +84,9 @@ public final class RunaChatActivity extends Activity {
         setUpWebView(webView);
         root.addView(webView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        spinner = new ProgressBar(this);
-        spinner.setIndeterminate(true);
-        root.addView(spinner, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+        loading = new LoadingView(this, titleFor(session.options));
+        root.addView(loading, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        loading.show();
 
         errorView = buildErrorView();
         errorView.setVisibility(View.GONE);
@@ -109,6 +110,7 @@ public final class RunaChatActivity extends Activity {
         if (backCallback != null && Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backCallback);
         }
+        main.removeCallbacks(hideLoading);
         if (webView != null) {
             webView.removeJavascriptInterface("RunaAndroid");
             webView.destroy();
@@ -185,7 +187,8 @@ public final class RunaChatActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView view, String u) {
-                spinner.setVisibility(View.GONE);
+                main.removeCallbacks(hideLoading);
+                if (loading.isShowing()) main.postDelayed(hideLoading, 4000);
             }
 
             @Override
@@ -225,7 +228,7 @@ public final class RunaChatActivity extends Activity {
         retry.setText("Try again");
         retry.setOnClickListener(v -> {
             errorView.setVisibility(View.GONE);
-            spinner.setVisibility(View.VISIBLE);
+            loading.show();
             pageReady = false;
             webView.reload();
         });
@@ -239,8 +242,15 @@ public final class RunaChatActivity extends Activity {
         return box;
     }
 
+    /** "Ask Quicklly" for the client key "quicklly": the name on the loading screen. */
+    private static String titleFor(RunaChat.Options options) {
+        String c = options.client;
+        return c.isEmpty() ? "Ask" : "Ask " + Character.toUpperCase(c.charAt(0)) + c.substring(1);
+    }
+
     private void showError() {
-        spinner.setVisibility(View.GONE);
+        main.removeCallbacks(hideLoading);
+        loading.hide(false);
         errorView.setVisibility(View.VISIBLE);
     }
 
@@ -270,6 +280,13 @@ public final class RunaChatActivity extends Activity {
                 case "ready":
                     pageReady = true;
                     sendCart();
+                    main.removeCallbacks(hideLoading);
+                    if (loading.isShowing()) main.postDelayed(hideLoading, 4000);
+                    break;
+                case "shown":
+                    // the chat has drawn: the loading screen fades into it
+                    main.removeCallbacks(hideLoading);
+                    loading.hide(true);
                     break;
                 case "setQty": {
                     RunaChat.Product product = new RunaChat.Product(payload);

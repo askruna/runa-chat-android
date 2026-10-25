@@ -73,6 +73,10 @@ let page = await chatPage();
 await page.waitForSelector(".runa-c__window--app", { timeout: 30000 });
 check(true, "chat opened in app mode inside the library's WebView");
 check(!!(await waitLog(/page→app ready/)), "page said ready");
+// 1.1.1: the loading screen (the Ask Quicklly mark) goes once the page says the chat has drawn
+check(!!(await waitLog(/page→app shown/, 20000)), "page said shown (the chat has drawn)");
+await sleep(600);
+check(!/content-desc="Loading Ask Quicklly"/.test(ui()), "the loading screen is gone");
 check(!!(await waitLog(/app→page cart/)), "library answered with the cart");
 const q = await page.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
 const appVersion = adb(`shell dumpsys package ${PKG}`).match(/versionName=(\S+)/)?.[1];   // the library reports the app's own version

@@ -10,7 +10,7 @@ screen, so improvements reach your users without app releases. The app provides 
 alone can do: who and where the shopper is, adding to the cart, what is in the cart, and opening
 your product screen.
 
-- Java, no dependencies beyond the Android SDK and `androidx.browser`, 36 KB
+- Java, no dependencies beyond the Android SDK and `androidx.browser`, 44 KB
 - minSdk 21 (Android 5.0+), tested on Android 14
 - works from Java or Kotlin
 
@@ -21,7 +21,7 @@ your product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.askruna:runa-chat-android:1.1.0'
+implementation 'com.github.askruna:runa-chat-android:1.1.1'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
@@ -83,7 +83,7 @@ so a new store row can be drawn without a lookup. Prices, images and terms come 
 `pid` and `sid`, so your server prices it as it always does.
 
 All callbacks run on the main thread. Keyboard, system bars, the back button, outside links,
-loading and error states are the library's job — see https://quicklly.askruna.ai/app/docs/.
+the loading screen (the Ask Quicklly mark) and the error state are the library's job — see https://quicklly.askruna.ai/app/docs/.
 
 ## Ask Quicklly in search (1.1.0)
 
@@ -153,6 +153,7 @@ without an app release; the library only needs the three callbacks above.
 
 ## Versions
 
+- **1.1.1** — the chat's loading screen: the Ask Quicklly mark (the search answer's sparkle in a spinning ring) instead of a plain spinner, until the chat has drawn.
 - **1.1.0** — `RunaSearchView` (Ask Quicklly in search), `RunaChat.orderPlaced`.
 - **1.0.3** — in-app browser fallback for outside links; `openProduct` required.
 

@@ -128,6 +128,7 @@ await chat.waitForSelector(".runa-c__window--app", { timeout: 30000 });
 let sent = false;
 for (let i = 0; i < 40 && !sent; i++) { sent = (await chat.evaluate(() => document.body.innerText)).includes(ask); if (!sent) await sleep(500); }
 check(sent, "the question was sent as the first message");
+check(!/content-desc="Loading Ask Quicklly"/.test(ui()), "the chat's loading screen is gone");
 adb("shell input keyevent 4");      // nothing open in the chat → the chat closes
 check(await waitTop(/SearchActivity/, 15000), "back → search screen");
 
