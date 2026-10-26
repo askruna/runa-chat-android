@@ -256,7 +256,7 @@ public final class RunaChat {
 
     /**
      * Report an order right after checkout, so the products Ask Quicklly brought to it are counted as its sales
-     * (what it added or opened in the 30 days before, the same rule as on your website). Call it once per order,
+     * (what it added or opened in the 7 days before, the same rule as on your website). Call it once per order,
      * on the main thread, with the same client key and userId as the chat; it returns at once and works in the
      * background (a few seconds, no UI). Optional {@code listener} hears the outcome.
      */
