@@ -55,9 +55,15 @@ final class OrderReporter {
             webView.getSettings().setAllowContentAccess(false);
             webView.addJavascriptInterface(new Bridge(), "RunaAndroid");
             webView.setWebViewClient(new WebViewClient());
+            // No personal data (1.1.2): the customer id the chat already uses, the platform and app version — not the
+            // ZIP, delivery address, city or state the chat is given.
             Uri.Builder b = Uri.parse(options.pageFor("order-app.html")).buildUpon();
-            RunaChat.putShopper(b, options, context);
+            RunaChat.put(b, "userId", options.userId);
+            RunaChat.put(b, "platform", "android");
+            RunaChat.put(b, "appVersion", RunaChat.appVersion(context));
+            if (options.debug) RunaChat.put(b, "debug", "1");
             String url = b.build().toString();
+            if (options.debug) Log.d(RunaChat.TAG, "order page " + url);
             origin = RunaChat.originOf(url);
             webView.loadUrl(url);
         } catch (Throwable t) {

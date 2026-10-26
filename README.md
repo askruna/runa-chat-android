@@ -21,7 +21,7 @@ your product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.askruna:runa-chat-android:1.1.1'
+implementation 'com.github.askruna:runa-chat-android:1.1.2'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
@@ -32,7 +32,7 @@ Nothing to add to your manifest: the library declares its own screen and the INT
 RunaChat.open(this,
     new RunaChat.Options("quicklly")        // your client key from Runa
         .zip("60610")                       // the delivery ZIP (required)
-        .userId("12345")                    // customer id, or a stable id for guests
+        .userId("12345")                    // your app's user id; guests: a random id saved once in the app
         .address("1140 N Wells St, Chicago").city("Chicago").state("IL"),
     new RunaChat.Callbacks() {
         @Override public void setQuantity(RunaChat.Product product, int quantity) {
@@ -113,7 +113,15 @@ answer.destroy();                                       // in onDestroy()
   vertical ones scroll your screen.
 - `notifyCartChanged()` and `updateAddress(…)` reach the search view too.
 
-## Orders (1.1.0)
+## Order tracking for analytics (optional, 1.1.0)
+
+Optional, for analytics only: this is how the results board counts the app's orders and the Ask
+Quicklly sales in them. The chat and the search view work without it.
+
+**No personal data:** the order number, the total and the products (pid, sid, unit price paid,
+quantity), with the user id the chat already uses. No names, emails,
+phone numbers, addresses, ZIP or payment details (the ZIP, address, city and state are left out of
+this call from 1.1.2).
 
 After your checkout succeeds, report the order. The library hands it to Runa's order page in a
 WebView the shopper never sees; it counts the products the shopper added from Ask Quicklly or
@@ -153,6 +161,7 @@ without an app release; the library only needs the three callbacks above.
 
 ## Versions
 
+- **1.1.2** — the order call (analytics) sends no ZIP, address, city or state: only the order, its products and the customer id.
 - **1.1.1** — the chat's loading screen: the Ask Quicklly mark (the search answer's sparkle in a spinning ring) instead of a plain spinner, until the chat has drawn.
 - **1.1.0** — `RunaSearchView` (Ask Quicklly in search), `RunaChat.orderPlaced`.
 - **1.0.3** — in-app browser fallback for outside links; `openProduct` required.

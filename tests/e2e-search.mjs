@@ -182,6 +182,8 @@ const done = await waitLog(/order page→app done/, 25000);
 const sales = done && done.match(/"sales":([\d.]+)/);
 check(!!done && /"ok":true/.test(done) && !!sales && +sales[1] > 0, `orderPlaced → reported with Ask Quicklly sales $${sales ? sales[1] : "?"}: ${(done || "").replace(/.*done /, "").slice(0, 120)}`);
 check(!!(await waitLog(/order reported=true/, 5000)), "OrderListener told reported=true");
+const orderUrl = (log().match(/order page (\S+)/) || [])[1] || "";
+check(!!orderUrl && /userId=/.test(orderUrl) && !/[?&](zip|address|city|state)=/.test(orderUrl), `no personal data in the order call: ${orderUrl.replace(/^.*\?/, "?")}`);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 try { await device.close(); } catch (e) {}
