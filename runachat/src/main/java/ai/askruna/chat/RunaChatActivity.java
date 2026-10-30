@@ -44,7 +44,7 @@ import java.util.List;
 public final class RunaChatActivity extends Activity {
 
     private static final String TAG = "RunaChat";
-    static final String BRIDGE_VERSION = "1.1";
+    static final String BRIDGE_VERSION = "1.2";   // 1.2: the product view (product, viewport)
     private static final long BACK_TIMEOUT_MS = 400;
 
     private static WeakReference<RunaChatActivity> currentRef = new WeakReference<>(null);

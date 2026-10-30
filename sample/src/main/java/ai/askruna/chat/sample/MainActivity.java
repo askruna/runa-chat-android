@@ -72,6 +72,11 @@ public class MainActivity extends Activity {
         search.setText("Search");
         search.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
         box.addView(search);
+        Button product = new Button(this);
+        product.setText("Product: okra");
+        product.setOnClickListener(v -> startActivity(new Intent(this, ProductActivity.class)
+            .putExtra("pid", "1013592").putExtra("sid", "113189").putExtra("title", "Okra (bhindi) 1 Lbs").putExtra("price", 3.39)));
+        box.addView(product);
         Button order = new Button(this);
         order.setText("Place order");
         order.setOnClickListener(v -> placeOrder());
@@ -85,6 +90,12 @@ public class MainActivity extends Activity {
         if (getIntent().getBooleanExtra("open_chat", false)) openChat(null);
         String q = getIntent().getStringExtra("search");
         if (q != null) startActivity(new Intent(this, SearchActivity.class).putExtra("query", q));
+        String pp = getIntent().getStringExtra("product");     // tests: "pid|sid|title" opens that product screen
+        if (pp != null) {
+            String[] f3 = pp.split("\\|", 3);
+            startActivity(new Intent(this, ProductActivity.class).putExtra("pid", f3[0]).putExtra("sid", f3.length > 1 ? f3[1] : "")
+                .putExtra("title", f3.length > 2 ? f3[2] : "").putExtra("price", 0.0));
+        }
     }
 
     @Override protected void onResume() { super.onResume(); refresh(); }
@@ -99,18 +110,19 @@ public class MainActivity extends Activity {
 
     // ─── This is the whole integration ──────────────────────────────────────────────────────
 
-    /** Who and where the shopper is — the same for the chat, the search view and the order report. */
+    /** Who and where the shopper is — the same for the chat, the search and product views and the order report. */
     static RunaChat.Options options() {
         RunaChat.Options o = new RunaChat.Options("quicklly")   // the client key from Runa
             .zip("60610")
             .userId("sample-user-1")
             .address("1140 N Wells St, Chicago").city("Chicago").state("IL")
-            .debug(true);
+            .debug(true)
+            .preview(true);   // a tester build: show what is still in preview for shoppers (the product view)
         if (pageBase != null) o.pageUrl(pageBase + "chat-app.html");   // Runa's tests only
         return o;
     }
 
-    /** Your cart and your product screen — the same for the chat and the search view. */
+    /** Your cart and your product screen — the same for the chat and the search and product views. */
     static RunaChat.Callbacks callbacks() {
         return new RunaChat.Callbacks() {
             @Override public void setQuantity(RunaChat.Product p, int quantity) {

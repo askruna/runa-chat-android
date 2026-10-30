@@ -1,8 +1,8 @@
 # Runa Chat for Android
 
 The Runa AI shopping assistant ("Ask Quicklly") in your Android app: the chat as a screen, Ask
-Quicklly in search as a view above your search results, and one call after checkout so orders
-count what Ask Quicklly sold. One dependency, three callbacks to connect it to your cart and your
+Quicklly in search as a view above your search results, Ask Quicklly on the product screen as a view
+under your product details, and one call after checkout so orders count what Ask Quicklly sold. One dependency, three callbacks to connect it to your cart and your
 product screen.
 
 The chat itself is hosted and updated by Runa and shown full screen by the library's own
@@ -21,7 +21,7 @@ your product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.askruna:runa-chat-android:1.1.2'
+implementation 'com.github.askruna:runa-chat-android:1.2.0'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
@@ -113,6 +113,30 @@ answer.destroy();                                       // in onDestroy()
   vertical ones scroll your screen.
 - `notifyCartChanged()` and `updateAddress(…)` reach the search view too.
 
+## Ask Quicklly on the product screen (1.2.0)
+
+A view for your product screen, under the product details: what goes with the product, as on
+quicklly.com's product pages — "Recipes" (the dishes it is for, every ingredient from the same store,
+one "Add all" button) or "Goes great with" — and the Ask Quicklly line under it ("Plan meals, build
+your cart"), which opens the chat with "Plan a meal with <product>". Same `Options` and `Callbacks`
+as the chat.
+
+```java
+RunaProductView bundle = new RunaProductView(this);     // or <ai.askruna.chat.RunaProductView> in XML
+productDetails.addView(bundle);                         // under your product details, full width, height WRAP_CONTENT
+bundle.setup(this, options, callbacks);                 // the same Options and Callbacks as RunaChat.open
+bundle.show("1013592", "113189", "Okra (bhindi) 1 Lbs");   // the product on screen: id, store id, name
+bundle.destroy();                                       // in onDestroy()
+```
+
+- The view sizes itself (about 400 dp with a bundle, about 70 with the line alone) and stays hidden
+  when the product has nothing to suggest. `setOnHeightChangeListener` tells you when it changes.
+- "Add all" calls `setQuantity` once per product; the button then reads "✓ All N in your cart" from `getCart`.
+- Until it is live for your shoppers the view stays hidden; testers' builds see it with
+  `Options.preview(true)`. Going live is switched by Runa, with no app release.
+- `show(…)` again when the screen shows another product (no reload). `notifyCartChanged()` and
+  `updateAddress(…)` reach the product view too.
+
 ## Order tracking for analytics (optional, 1.1.0)
 
 Optional, for analytics only: this is how the results board counts the app's orders and the Ask
@@ -140,10 +164,11 @@ An order is counted once (the same order number again is ignored).
 
 ## Sample app
 
-`sample/` is a small app standing in for a retailer's app: a cart, a product screen, an
-"Ask Quicklly" button, a search screen with Ask Quicklly in search (`SearchActivity`) and a
-"Place order" button. Everything a retailer writes is in `MainActivity` (`options()`,
-`callbacks()`, `openChat()`, `placeOrder()`) and `SearchActivity`.
+`sample/` is a small app standing in for a retailer's app: a cart, a product screen with Ask
+Quicklly's bundle under the details (`ProductActivity`), an "Ask Quicklly" button, a search screen
+with Ask Quicklly in search (`SearchActivity`) and a "Place order" button. Everything a retailer
+writes is in `MainActivity` (`options()`, `callbacks()`, `openChat()`, `placeOrder()`),
+`SearchActivity` and `ProductActivity`.
 
 ```
 ./gradlew :sample:installDebug      # on a connected device or emulator
@@ -151,7 +176,8 @@ An order is counted once (the same order number again is ignored).
 
 `tests/e2e.mjs` drives the sample end to end on an emulator (the chat screen, native taps
 through adb, the callbacks in logcat): `npm i playwright && node tests/e2e.mjs`.
-`tests/e2e-search.mjs` does the same for the search view and `orderPlaced`.
+`tests/e2e-search.mjs` does the same for the search view and `orderPlaced`, `tests/e2e-product.mjs`
+for the product view.
 
 ## Documentation
 
@@ -161,6 +187,7 @@ without an app release; the library only needs the three callbacks above.
 
 ## Versions
 
+- **1.2.0** — `RunaProductView` (Ask Quicklly on the product screen), `Options.preview(…)` for testers.
 - **1.1.2** — the order call (analytics) sends no ZIP, address, city or state: only the order, its products and the customer id.
 - **1.1.1** — the chat's loading screen: the Ask Quicklly mark (the search answer's sparkle in a spinning ring) instead of a plain spinner, until the chat has drawn.
 - **1.1.0** — `RunaSearchView` (Ask Quicklly in search), `RunaChat.orderPlaced`.

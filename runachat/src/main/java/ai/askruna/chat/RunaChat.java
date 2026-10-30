@@ -40,7 +40,8 @@ import java.util.WeakHashMap;
  * All callbacks run on the main thread.
  *
  * <p>Also in this library: {@link RunaSearchView}, Ask Quicklly's answer above your own search results (same
- * callbacks), and {@link #orderPlaced}, which reports an order so the sales Ask Quicklly brought are counted.
+ * callbacks), {@link RunaProductView}, the bundle and the Ask Quicklly line under your product details (same callbacks),
+ * and {@link #orderPlaced}, which reports an order so the sales Ask Quicklly brought are counted.
  */
 public final class RunaChat {
 
@@ -77,9 +78,10 @@ public final class RunaChat {
         final String client;
         String pageUrl;
         String zip, userId, address, city, state, storeId, question;
-        /** Where a chat started, for the client's analytics: "search_answers" when opened from {@link RunaSearchView}. */
+        /** Where a chat started, for the client's analytics: "search_answers" when opened from {@link RunaSearchView},
+         *  "product_page" from {@link RunaProductView}. */
         String entry;
-        boolean debug;
+        boolean debug, preview;
 
         /** @param client your client key from Runa, e.g. "quicklly" */
         public Options(String client) { this.client = client == null ? "" : client.trim().toLowerCase(java.util.Locale.ROOT); }
@@ -88,7 +90,8 @@ public final class RunaChat {
         String pageUrl() {
             return pageFor("chat-app.html");
         }
-        /** One of this client's pages: chat-app.html, search-app.html (RunaSearchView), order-app.html (orderPlaced). */
+        /** One of this client's pages: chat-app.html, search-app.html (RunaSearchView), product-app.html (RunaProductView),
+         *  order-app.html (orderPlaced). */
         String pageFor(String page) {
             if (pageUrl == null) return "https://" + client + ".askruna.ai/app/" + page;
             int slash = pageUrl.lastIndexOf('/');
@@ -100,7 +103,7 @@ public final class RunaChat {
         Options copy() {
             Options o = new Options(client);
             o.pageUrl = pageUrl; o.zip = zip; o.userId = userId; o.address = address; o.city = city; o.state = state;
-            o.storeId = storeId; o.question = question; o.entry = entry; o.debug = debug;
+            o.storeId = storeId; o.question = question; o.entry = entry; o.debug = debug; o.preview = preview;
             return o;
         }
 
@@ -118,6 +121,8 @@ public final class RunaChat {
         public Options question(String question) { this.question = question; return this; }
         /** Log every message between the app and the page (tag "RunaChat"). */
         public Options debug(boolean debug) { this.debug = debug; return this; }
+        /** Your testers' builds: show what is still in preview for shoppers (e.g. {@link RunaProductView} before it is live). */
+        public Options preview(boolean preview) { this.preview = preview; return this; }
     }
 
     /** A product the chat wants in the cart. Ids are Quicklly's numeric ids, as strings. */
@@ -241,6 +246,7 @@ public final class RunaChat {
         RunaChatActivity chat = RunaChatActivity.current();
         if (chat != null) chat.runOnUiThread(chat::sendCart);
         for (RunaSearchView v : searchViews()) v.post(v::sendCart);
+        for (RunaProductView v : productViews()) v.post(v::sendCart);
     }
 
     /** The shopper changed the delivery address. An open chat re-scopes to it and starts a new conversation. */
@@ -252,6 +258,7 @@ public final class RunaChat {
         RunaChatActivity chat = RunaChatActivity.current();
         if (chat != null) chat.runOnUiThread(() -> chat.sendAddress(zip, address, city, state));
         for (RunaSearchView v : searchViews()) v.post(() -> v.sendAddress(zip, address, city, state));
+        for (RunaProductView v : productViews()) v.post(() -> v.sendAddress(zip, address, city, state));
     }
 
     /**
@@ -268,12 +275,16 @@ public final class RunaChat {
 
     public static void orderPlaced(Context context, Options options, Order order) { orderPlaced(context, options, order, null); }
 
-    // ── shared by the screen, the search view and the order reporter ─────────────────────────
+    // ── shared by the screen, the search and product views and the order reporter ─────────────
 
     private static final Set<RunaSearchView> SEARCH_VIEWS = Collections.newSetFromMap(new WeakHashMap<>());
     static synchronized void addSearchView(RunaSearchView v) { SEARCH_VIEWS.add(v); }
     static synchronized void removeSearchView(RunaSearchView v) { SEARCH_VIEWS.remove(v); }
     static synchronized List<RunaSearchView> searchViews() { return new ArrayList<>(SEARCH_VIEWS); }
+    private static final Set<RunaProductView> PRODUCT_VIEWS = Collections.newSetFromMap(new WeakHashMap<>());
+    static synchronized void addProductView(RunaProductView v) { PRODUCT_VIEWS.add(v); }
+    static synchronized void removeProductView(RunaProductView v) { PRODUCT_VIEWS.remove(v); }
+    static synchronized List<RunaProductView> productViews() { return new ArrayList<>(PRODUCT_VIEWS); }
 
     /** Every page gets who and where the shopper is and which app build asks. */
     static void putShopper(Uri.Builder b, Options o, Context c) {
