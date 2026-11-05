@@ -21,7 +21,7 @@ your product screen.
 maven { url 'https://jitpack.io' }
 
 // app/build.gradle
-implementation 'com.github.askruna:runa-chat-android:1.2.0'
+implementation 'com.github.askruna:runa-chat-android:1.2.1'
 ```
 
 Nothing to add to your manifest: the library declares its own screen and the INTERNET permission.
@@ -48,7 +48,7 @@ RunaChat.open(this,
     });
 ```
 
-**Required** — three callbacks:
+**Required** — three callbacks, plus `RunaChat.orderPlaced` after checkout (Order tracking, below):
 
 | callback | when | what you do |
 | --- | --- | --- |
@@ -75,10 +75,12 @@ Optional: `RunaChat.warmUp(context)` early (e.g. when the grocery tab opens) mak
 open of the chat faster. `Options.question("…")` opens the chat with a question already sent
 (deep links, "ask about this product"); `Options.debug(true)` logs every message (tag `RunaChat`).
 
-`setQuantity` is called with everything the chat knows about the product (`title`, `price`,
-`image`, `storeName`, `storeImage`, `url`, `fastDelivery`, and `raw` with the whole payload) and the
-store's terms for the shopper's ZIP (`minOrder`, `deliveryFee`, `deliveryRange`, `instantDelivery`),
-so a new store row can be drawn without a lookup. Prices, images and terms come from Runa's index
+`setQuantity` is called with everything the chat knows about the product (`title`, `price`, `mrp`,
+`tax`, `image`, `storeName`, `storeImage`, `storeBanner`, `storeAddress`, `url`, `fastDelivery`, and
+`raw` with the whole payload) and the store's terms for the shopper's ZIP (`minOrder`, `deliveryFee`,
+`deliveryRange`, `instantDelivery`), so a new store row can be drawn without a lookup. `mrp` is the
+original price while the product is on sale, else the price; `tax` is the tax per unit in USD as
+your product cards print it (`null` while not known). Prices, images and terms come from Runa's index
 (refreshed nightly) and are for display: add the line through your usual add-to-cart call with
 `pid` and `sid`, so your server prices it as it always does.
 
@@ -137,10 +139,10 @@ bundle.destroy();                                       // in onDestroy()
 - `show(…)` again when the screen shows another product (no reload). `notifyCartChanged()` and
   `updateAddress(…)` reach the product view too.
 
-## Order tracking for analytics (optional, 1.1.0)
+## Order tracking for analytics (required, 1.1.0)
 
-Optional, for analytics only: this is how the results board counts the app's orders and the Ask
-Quicklly sales in them. The chat and the search view work without it.
+Required: this is how the results board counts the app's orders and the Ask Quicklly sales in
+them. Without it the board shows the app's conversations but no orders and no sales.
 
 **No personal data:** the order number, the total and the products (pid, sid, unit price paid,
 quantity), with the user id the chat already uses. No names, emails,
@@ -156,7 +158,7 @@ RunaChat.orderPlaced(this, options,
     new RunaChat.Order("QD237898", 54.32)                // your order number, the total paid
         .line("706824", "112333", 7.59, 2)               // per product: pid, sid, unit price paid, quantity
         .line("905", "112333", 15.45, 1),
-    (reported, reason) -> Log.d("App", "order reported " + reported));   // optional
+    (reported, reason) -> Log.d("App", "order reported " + reported));   // callback optional
 ```
 
 Send only the order number, the amounts and the lines: no names, addresses or payment details.
@@ -187,6 +189,7 @@ without an app release; the library only needs the three callbacks above.
 
 ## Versions
 
+- **1.2.1** — every product also carries `storeBanner`, `storeAddress`, `mrp` and `tax` (Quicklly mobile team's cart line).
 - **1.2.0** — `RunaProductView` (Ask Quicklly on the product screen), `Options.preview(…)` for testers.
 - **1.1.2** — the order call (analytics) sends no ZIP, address, city or state: only the order, its products and the customer id.
 - **1.1.1** — the chat's loading screen: the Ask Quicklly mark (the search answer's sparkle in a spinning ring) instead of a plain spinner, until the chat has drawn.

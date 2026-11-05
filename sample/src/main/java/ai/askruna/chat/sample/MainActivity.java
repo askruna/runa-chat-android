@@ -127,7 +127,8 @@ public class MainActivity extends Activity {
         return new RunaChat.Callbacks() {
             @Override public void setQuantity(RunaChat.Product p, int quantity) {
                 Log.i(TAG, "setQuantity pid=" + p.pid + " sid=" + p.sid + " qty=" + quantity + " title=" + p.title
-                    + " minOrder=" + p.minOrder + " deliveryFee=" + p.deliveryFee + " range=" + p.deliveryRange + " instant=" + p.instantDelivery);
+                    + " minOrder=" + p.minOrder + " deliveryFee=" + p.deliveryFee + " range=" + p.deliveryRange + " instant=" + p.instantDelivery
+                    + " mrp=" + p.mrp + " tax=" + p.tax + " banner=" + p.storeBanner + " addr=" + p.storeAddress);
                 SampleCart.set(p.pid, p.sid, p.title, p.price, quantity);   // your add-to-cart
             }
 

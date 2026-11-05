@@ -99,6 +99,7 @@ fs.writeFileSync(SHOTS + "/runasearch-android-answer.png", execSync("adb exec-ou
 await page.locator(".runa-sb .runa-c__pcard-add").first().click();
 const sq = await waitLog(/setQuantity pid=\d+ sid=\d+ qty=1/);
 check(!!sq, "ADD → Callbacks.setQuantity(product, 1): " + (sq || "").replace(/.*setQuantity /, "").slice(0, 100));
+check(/ mrp=\d+(\.\d+)? tax=(\d+(\.\d+)?|null) banner=https?:\/\/\S+ addr=\S/.test(sq || "") && (process.env.STRICT_TAX !== "1" || / tax=\d+(\.\d+)? /.test(sq || "")), "product carries mrp, tax, store banner + address (1.2.1): " + ((sq || "").match(/ mrp=.*/) || [""])[0].slice(0, 160));
 await sleep(700);
 check((await page.locator(".runa-sb .runa-c__pcard-qty-n").first().textContent()).trim() === "1", "stepper shows 1 (from getCart)");
 adb(`shell am broadcast -a ${PKG}.BUMP --ei delta 1 -p ${PKG}`);

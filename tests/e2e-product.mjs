@@ -97,6 +97,8 @@ await page.locator(".runa-pb__all").click();
 await sleep(3000);
 const sqLines = log().split("\n").filter((l) => /setQuantity pid=/.test(l)).slice(sqBefore);
 check(sqLines.length === n && sqLines.every((l) => /sid=113189 qty=1/.test(l)), `"Add all" → ${sqLines.length} setQuantity calls (store 113189, qty 1)`);
+const sqAll = sqLines.join("\n");
+check(sqLines.length > 0 && sqLines.every((l) => / mrp=\d+(\.\d+)? tax=(\d+(\.\d+)?|null) banner=https?:\/\/\S+ addr=\S/.test(l) && (process.env.STRICT_TAX !== "1" || / tax=\d+(\.\d+)? /.test(l))), "every Add-all product carries mrp, tax, store banner + address (1.2.1): " + ((sqLines[0] || "").match(/ mrp=.*/) || [""])[0].slice(0, 160));
 const label = (await page.locator(".runa-pb__all").innerText()).trim();
 check(/^✓ All \d+ in your cart$/.test(label), `button from the cart snapshots: "${label}"`);
 

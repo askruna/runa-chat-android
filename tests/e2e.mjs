@@ -7,6 +7,8 @@ import { execSync } from "child_process";
 import fs from "fs";
 
 const PKG = process.env.PKG || "ai.askruna.chat.sample";
+// PAGE_BASE=http://quicklly.localhost:5521/ → the chat page from the laptop (adb reverse); default: the live page
+const PAGE_BASE = process.env.PAGE_BASE || "";
 const adb = (c) => execSync(`adb ${c}`, { maxBuffer: 50e6 }).toString();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, fail = 0;
@@ -56,6 +58,7 @@ async function chatPage() {
   throw new Error("no WebView for " + PKG);
 }
 
+{ const lp = (PAGE_BASE.match(/^http:\/\/[^/]*localhost:(\d+)/) || [])[1]; if (lp) adb(`reverse tcp:${lp} tcp:${lp}`); }
 adb("logcat -c");
 adb(`shell am force-stop ${PKG}`);
 adb(`shell pm clear ${PKG}`);
@@ -63,7 +66,7 @@ await sleep(4000);
 // A slow emulator sometimes loses the first start right after clearing data: start, wait, retry.
 let opened = false;
 for (let attempt = 1; attempt <= 4 && !opened; attempt++) {
-  adb(`shell am start -n ${PKG}/.MainActivity --ez open_chat true`);
+  adb(`shell am start -n ${PKG}/.MainActivity --ez open_chat true` + (PAGE_BASE ? ` --es page_base ${PAGE_BASE}` : ""));
   opened = await waitTop(/RunaChatActivity/, 60000);
   if (!opened) { console.log(`      (start attempt ${attempt} did not reach the chat screen, retrying)`); adb(`shell am force-stop ${PKG}`); await sleep(3000); }
 }
@@ -114,6 +117,7 @@ await page.locator(".runa-c__pcard-add").first().click();
 const sq = await waitLog(/setQuantity pid=\d+ sid=\d+ qty=1/);
 check(!!sq, "ADD → Callbacks.setQuantity(product, 1): " + (sq || "").replace(/.*setQuantity /, "").slice(0, 120));
 check(/minOrder=\d+(\.\d+)? deliveryFee=\d+(\.\d+)? range=\S/.test(sq || ""), "product carries the store's terms for the ZIP (minOrder, deliveryFee, range)");
+check(/ mrp=\d+(\.\d+)? tax=(\d+(\.\d+)?|null) banner=https?:\/\/\S+ addr=\S/.test(sq || "") && (process.env.STRICT_TAX !== "1" || / tax=\d+(\.\d+)? /.test(sq || "")), "product carries mrp, tax, store banner + address (1.2.1): " + ((sq || "").match(/ mrp=.*/) || [""])[0].slice(0, 160));
 await sleep(600);
 check((await page.locator(".runa-c__pcard-qty-n").first().textContent()).trim() === "1", "stepper shows 1 (from getCart)");
 

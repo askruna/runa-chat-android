@@ -143,6 +143,13 @@ public final class RunaChat {
         public final String deliveryRange;
         public final boolean instantDelivery;
         public final String storeImage;
+        /** The store's banner image and street address, from Quicklly's own store list. "" = unknown. */
+        public final String storeBanner;
+        public final String storeAddress;
+        /** MRP: the original price while the product is on sale, else the price. null = unknown. */
+        public final Double mrp;
+        /** Tax per unit in USD, as your product cards print it (data-tax). null = not known yet. */
+        public final Double tax;
         /** The whole message payload, for anything not listed above. */
         public final JSONObject raw;
 
@@ -162,6 +169,10 @@ public final class RunaChat {
             deliveryRange = p.optString("deliveryRange", "");
             instantDelivery = p.optBoolean("instantDelivery", false);
             storeImage = p.optString("storeImage", "");
+            storeBanner = p.optString("storeBanner", "");
+            storeAddress = p.optString("storeAddress", "");
+            mrp = p.isNull("mrp") || !p.has("mrp") ? null : p.optDouble("mrp");
+            tax = p.isNull("tax") || !p.has("tax") ? null : p.optDouble("tax");
         }
 
         @Override public String toString() { return "Product{pid=" + pid + ", sid=" + sid + ", title=" + title + "}"; }
